@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RideCash - Create demo accounts</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; background:#f2f3f5; }
+  .card { background:#fff; padding:24px; border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+  h1 { font-size:20px; margin-top:0; }
+  button { width:100%; padding:14px; border:none; border-radius:8px; background:#111; color:#fff; font-weight:700; font-size:15px; cursor:pointer; margin-top:8px; }
+  button:disabled { opacity:0.5; }
+  pre { background:#f5f5f5; padding:12px; border-radius:8px; font-size:12px; white-space:pre-wrap; word-break:break-word; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>RideCash — Create demo accounts</h1>
+  <p>Hii itaunda akaunti 3 kwenye backend: Mteja, Dereva, na Admin. Bofya mara moja tu.</p>
+  <button id="go">Create demo accounts</button>
+  <pre id="log">Bado hakuna kilichofanyika.</pre>
+</div>
+<script>
+const API = "https://ridecash-backend.onrender.com/api";
+const log = document.getElementById('log');
+const btn = document.getElementById('go');
+
+async function register(phone, name, password, role) {
+  const res = await fetch(`${API}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, name, password, role }),
+  });
+  const data = await res.json();
+  return { ok: res.ok, data };
+}
+
+btn.addEventListener('click', async () => {
+  btn.disabled = true;
+  log.textContent = 'Inatengeneza akaunti... (backend ikiwa imelala, inaweza kuchukua sekunde 30-50 za kwanza)';
+  const accounts = [
+    ['255700000001', 'Demo Passenger', 'Password123!', 'PASSENGER'],
+    ['255700000002', 'Demo Driver', 'Password123!', 'DRIVER'],
+    ['255700000000', 'Demo Admin', 'Password123!', 'ADMIN'],
+  ];
+  let out = '';
+  for (const [phone, name, password, role] of accounts) {
+    try {
+      const { ok, data } = await register(phone, name, password, role);
+      if (ok) out += `✅ ${role} (${phone}) imetengenezwa.\n`;
+      else out += `⚠️ ${role} (${phone}): ${data.error || 'error'} (huenda tayari ipo)\n`;
+    } catch (e) {
+      out += `❌ ${role} (${phone}): ${e.message}\n`;
+    }
+    log.textContent = out;
+  }
+  out += '\nMalizika.';
+  log.textContent = out;
+  btn.disabled = false;
+});
+</script>
+</body>
+</html>
