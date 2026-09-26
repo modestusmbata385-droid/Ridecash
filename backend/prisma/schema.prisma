@@ -7,11 +7,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role { PASSENGER DRIVER ADMIN }
-enum DriverStatus { PENDING APPROVED SUSPENDED }
-enum RideStatus { REQUESTED ACCEPTED ARRIVING STARTED COMPLETED CANCELLED }
-enum PaymentMethod { CASH }
-enum KycStatus { PENDING APPROVED REJECTED }
+enum Role {
+  PASSENGER
+  DRIVER
+  ADMIN
+}
+
+enum DriverStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+enum RideStatus {
+  REQUESTED
+  ACCEPTED
+  ARRIVING
+  STARTED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
 
 model User {
   id             String    @id @default(cuid())
