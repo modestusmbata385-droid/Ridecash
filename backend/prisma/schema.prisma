@@ -1,15 +1,114 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 enum Role { PASSENGER DRIVER ADMIN }
 enum DriverStatus { PENDING APPROVED SUSPENDED }
 enum RideStatus { REQUESTED ACCEPTED ARRIVING STARTED COMPLETED CANCELLED }
 enum PaymentMethod { CASH }
 enum KycStatus { PENDING APPROVED REJECTED }
-model User { id String @id @default(cuid()) phone String @unique name String passwordHash String role Role createdAt DateTime @default(now()) updatedAt DateTime @updatedAt driver Driver? passengerRides Ride[] }
-model Driver { id String @id @default(cuid()) userId String @unique user User @relation(fields:[userId],references:[id]) status DriverStatus @default(PENDING) kycStatus KycStatus @default(PENDING) points Int @default(0) vehiclePlate String? vehicleModel String? debt Int @default(0) online Boolean @default(false) lat Float? lng Float? lastSeen DateTime? createdAt DateTime @default(now()) kycDocuments KycDocument[] commissionPayments CommissionPayment[] rides Ride[] }
-model Ride { id String @id @default(cuid()) passengerId String driverId String? pickupLat Float pickupLng Float destinationLat Float destinationLng Float pickupAddress String? destinationAddress String? fare Int status RideStatus @default(REQUESTED) paymentMethod PaymentMethod @default(CASH) commission Int @default(0) requestedAt DateTime @default(now()) acceptedAt DateTime? startedAt DateTime? completedAt DateTime? passenger User @relation(fields:[passengerId],references:[id]) driver Driver? @relation(fields:[driverId],references:[id]) }
-model KycDocument { id String @id @default(cuid()) driverId String driver Driver @relation(fields:[driverId],references:[id]) type String url String status KycStatus @default(PENDING) createdAt DateTime @default(now()) @@index([driverId]) }
-model Otp { id String @id @default(cuid()) phone String code String expiresAt DateTime used Boolean @default(false) createdAt DateTime @default(now()) @@index([phone]) }
-model SafetyReport { id String @id @default(cuid()) rideId String reporterId String reason String details String? createdAt DateTime @default(now()) @@index([rideId]) }
-model CommissionPayment { id String @id @default(cuid()) driverId String driver Driver @relation(fields:[driverId],references:[id]) amount Int reference String? status String @default("PENDING") createdAt DateTime @default(now()) @@index([driverId]) }
+
+model User {
+  id             String    @id @default(cuid())
+  phone          String    @unique
+  name           String
+  passwordHash   String
+  role           Role
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  driver         Driver?
+  passengerRides Ride[]
+}
+
+model Driver {
+  id                 String               @id @default(cuid())
+  userId             String               @unique
+  user               User                 @relation(fields: [userId], references: [id])
+  status             DriverStatus         @default(PENDING)
+  kycStatus          KycStatus            @default(PENDING)
+  points             Int                  @default(0)
+  vehiclePlate       String?
+  vehicleModel       String?
+  debt               Int                  @default(0)
+  online             Boolean              @default(false)
+  lat                Float?
+  lng                Float?
+  lastSeen           DateTime?
+  createdAt          DateTime             @default(now())
+  kycDocuments       KycDocument[]
+  commissionPayments CommissionPayment[]
+  rides              Ride[]
+}
+
+model Ride {
+  id                 String        @id @default(cuid())
+  passengerId        String
+  driverId           String?
+  pickupLat          Float
+  pickupLng          Float
+  destinationLat     Float
+  destinationLng     Float
+  pickupAddress      String?
+  destinationAddress String?
+  fare               Int
+  status             RideStatus    @default(REQUESTED)
+  paymentMethod      PaymentMethod @default(CASH)
+  commission         Int           @default(0)
+  requestedAt        DateTime      @default(now())
+  acceptedAt         DateTime?
+  startedAt          DateTime?
+  completedAt        DateTime?
+  passenger          User          @relation(fields: [passengerId], references: [id])
+  driver             Driver?       @relation(fields: [driverId], references: [id])
+}
+
+model KycDocument {
+  id        String    @id @default(cuid())
+  driverId  String
+  driver    Driver    @relation(fields: [driverId], references: [id])
+  type      String
+  url       String
+  status    KycStatus @default(PENDING)
+  createdAt DateTime  @default(now())
+
+  @@index([driverId])
+}
+
+model Otp {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+}
+
+model SafetyReport {
+  id         String   @id @default(cuid())
+  rideId     String
+  reporterId String
+  reason     String
+  details    String?
+  createdAt  DateTime @default(now())
+
+  @@index([rideId])
+}
+
+model CommissionPayment {
+  id        String   @id @default(cuid())
+  driverId  String
+  driver    Driver   @relation(fields: [driverId], references: [id])
+  amount    Int
+  reference String?
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+
+  @@index([driverId])
+}
