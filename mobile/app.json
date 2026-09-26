@@ -1,0 +1,1 @@
+{"expo":{"name":"RideCash","slug":"ridecash","version":"3.0.0","orientation":"portrait","plugins":["expo-location","expo-notifications"],"android":{"permissions":["ACCESS_COARSE_LOCATION","ACCESS_FINE_LOCATION","ACCESS_BACKGROUND_LOCATION","POST_NOTIFICATIONS"]}}}
