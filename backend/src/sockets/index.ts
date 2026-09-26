@@ -1,0 +1,1 @@
+import {Server} from 'socket.io'; export function setupSockets(io:Server){io.on('connection',socket=>{socket.on('ride:join',(id:string)=>socket.join(`ride:${id}`));socket.on('ride:location',(p:any)=>socket.to(`ride:${p.rideId}`).emit('ride:location',p));socket.on('disconnect',()=>{});});}
