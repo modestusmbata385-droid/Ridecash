@@ -1,0 +1,3 @@
+import {prisma} from '../config/prisma'; import {env} from '../config/env';
+export async function setOnline(userId:string,online:boolean){const d=await prisma.driver.findUnique({where:{userId}});if(!d)throw Error('Driver profile missing');if(online&&(d.status!=='APPROVED'||d.kycStatus!=='APPROVED'||d.debt>=env.DEBT_LIMIT))throw Error('Driver must be approved and debt below limit');return prisma.driver.update({where:{id:d.id},data:{online,lastSeen:new Date()}})}
+export async function location(userId:string,lat:number,lng:number){const d=await prisma.driver.findUnique({where:{userId}});if(!d)throw Error('Driver profile missing');return prisma.driver.update({where:{id:d.id},data:{lat,lng,lastSeen:new Date()}})}
