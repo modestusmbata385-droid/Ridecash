@@ -1,0 +1,1 @@
+import {Router} from 'express'; import {auth,role} from '../middleware/auth'; import * as c from '../controllers/driver.controller'; const r=Router();r.post('/online',auth,role('DRIVER'),c.online);r.post('/location',auth,role('DRIVER'),c.location);export default r;
