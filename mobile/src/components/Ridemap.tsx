@@ -1,67 +1,108 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { WebView } from 'react-native-webview';
+import React from 'react';
+import MapView, { Marker, Polyline, Region } from 'react-native-maps';
+import { StyleSheet, View } from 'react-native';
 
-export default function RideMap({ pickup, destination, driver }: any) {
-  const ref = useRef<WebView>(null);
+type LatLng = {
+  lat: number;
+  lng: number;
+  address?: string;
+};
 
-  const html = `<!doctype html>
-  <html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <style>
-      html,body,#map{height:100%;margin:0;padding:0;}
-    </style>
-  </head>
-  <body>
-    <div id="map"></div>
+type Props = {
+  pickup?: LatLng | null;
+  destination?: LatLng | null;
+  driver?: LatLng | null;
+};
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-      var map = L.map('map').setView([${pickup?.lat || -6.8}, ${pickup?.lng || 39.28}], 14);
+export default function RideMap({
+  pickup,
+  destination,
+  driver,
+}: Props) {
+  const center = pickup || destination || driver;
 
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-        maxZoom:19
-      }).addTo(map);
+  const region: Region = {
+    latitude: center?.lat ?? -6.8,
+    longitude: center?.lng ?? 39.28,
+    latitudeDelta: 0.08,
+    longitudeDelta: 0.08,
+  };
 
-      var pickupIcon = L.divIcon({html:'🟢',iconSize:[24,24]});
-      var destIcon = L.divIcon({html:'⚫',iconSize:[24,24]});
-      var carIcon = L.divIcon({html:'🚗',iconSize:[28,28]});
+  const route = [];
 
-      ${pickup ? `L.marker([${pickup.lat},${pickup.lng}],{icon:pickupIcon}).addTo(map);` : ''}
-      ${destination ? `L.marker([${destination.lat},${destination.lng}],{icon:destIcon}).addTo(map);` : ''}
+  if (pickup) {
+    route.push({
+      latitude: pickup.lat,
+      longitude: pickup.lng,
+    });
+  }
 
-      var driverMarker=null;
-      function updateDriver(lat,lng){
-        if(!driverMarker){
-          driverMarker=L.marker([lat,lng],{icon:carIcon}).addTo(map);
-        }else{
-          driverMarker.setLatLng([lat,lng]);
-        }
-      }
-
-      ${driver ? `updateDriver(${driver.lat},${driver.lng});` : ''}
-    </script>
-  </body>
-  </html>`;
-
-  useEffect(() => {
-    if (driver && ref.current) {
-      ref.current.injectJavaScript(
-        `updateDriver(${driver.lat},${driver.lng}); true;`
-      );
-    }
-  }, [driver?.lat, driver?.lng]);
+  if (destination) {
+    route.push({
+      latitude: destination.lat,
+      longitude: destination.lng,
+    });
+  }
 
   return (
-    <View style={{ flex: 1 }}>
-      <WebView
-        ref={ref}
-        originWhitelist={['*']}
-        source={{ html }}
-        style={StyleSheet.absoluteFill}
-      />
+    <View style={styles.container}>
+      <MapView
+        style={styles.map}
+        initialRegion={region}
+        showsUserLocation
+        showsMyLocationButton
+      >
+        {pickup && (
+          <Marker
+            coordinate={{
+              latitude: pickup.lat,
+              longitude: pickup.lng,
+            }}
+            title="Sehemu ya kuanzia"
+            description={pickup.address}
+          />
+        )}
+
+        {destination && (
+          <Marker
+            coordinate={{
+              latitude: destination.lat,
+              longitude: destination.lng,
+            }}
+            title="Unakoenda"
+            description={destination.address}
+          />
+        )}
+
+        {driver && (
+          <Marker
+            coordinate={{
+              latitude: driver.lat,
+              longitude: driver.lng,
+            }}
+            title="Dereva"
+            description="Dereva yupo hapa"
+          />
+        )}
+
+        {route.length >= 2 && (
+          <Polyline
+            coordinates={route}
+            strokeWidth={4}
+          />
+        )}
+      </MapView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    minHeight: 300,
+    overflow: 'hidden',
+  },
+  map: {
+    flex: 1,
+  },
+});
