@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, Alert, StyleSheet, FlatList, RefreshControl, TextInput } from 'react-native';
 import { api } from '../api/client';
 import PrimaryButton from '../components/PrimaryButton';
 import { watchDriverLocation } from '../services/location';
+import { socket } from '../services/socket';
+import { colors, radius } from '../theme';
 import KycScreen from './KycScreen';
 import SafetyReportModal from './SafetyReportModal';
 
@@ -15,7 +17,11 @@ export default function DriverScreen() {
   const [showSafety, setShowSafety] = useState(false);
   const [payAmount, setPayAmount] = useState('');
   const [payRef, setPayRef] = useState('');
+const activeRideRef = useRef<any>(null);
 
+useEffect(() => {
+  activeRideRef.current = activeRide;
+}, [activeRide]);
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -42,7 +48,12 @@ export default function DriverScreen() {
       const next = !online;
       await api('/drivers/online', { method: 'POST', body: JSON.stringify({ online: next }) });
       setOnline(next);
-      if (next) await watchDriverLocation();
+      if (next) {
+  if (!socket.connected) socket.connect();
+  await watchDriverLocation(() => activeRideRef.current?.id || null);
+} else {
+  socket.disconnect();
+      }
       refresh();
     } catch (e: any) {
       Alert.alert('Driver', e.message);
@@ -52,7 +63,9 @@ export default function DriverScreen() {
   const accept = async (rideId: string) => {
     try {
       await api(`/rides/${rideId}/accept`, { method: 'POST' });
-      refresh();
+if (!socket.connected) socket.connect();
+socket.emit('ride:join', rideId);
+refresh();
     } catch (e: any) {
       Alert.alert('Accept ride', e.message);
     }
