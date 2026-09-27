@@ -1,4 +1,3 @@
-import * as Location from 'expo-location';
 import { api } from '../api/client';
 import { socket } from './socket';
 
