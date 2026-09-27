@@ -1,5 +1,12 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { View, Text, Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+} from 'react-native';
 import { api } from '../api/client';
 import PrimaryButton from '../components/PrimaryButton';
 import SafetyReportModal from './SafetyReportModal';
@@ -265,4 +272,12 @@ const s = StyleSheet.create({
     marginBottom: 6,
     color: colors.primaryDark,
   },
+i: {
+  borderWidth: 1,
+  borderColor: colors.border,
+  padding: 14,
+  marginBottom: 16,
+  borderRadius: radius.md,
+  backgroundColor: colors.card,
+},
 });
