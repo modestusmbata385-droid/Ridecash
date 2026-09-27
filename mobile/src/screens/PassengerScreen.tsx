@@ -6,8 +6,7 @@ import RideMap from '../components/RideMap';
 import { getCurrentLocation } from '../services/location';
 import { socket } from '../services/socket';
 import { colors, radius } from '../theme';
-import { api } from '../api/client';
-import PrimaryButton from '../components/PrimaryButton';
+import { api } from '../api/client'
 import SafetyReportModal from './SafetyReportModal';
 
 export default function PassengerScreen() {
