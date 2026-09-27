@@ -94,3 +94,175 @@ export default function PassengerScreen() {
     socket.on('ride:location', onLocation);
     return () => socket.off('ride:location', onLocation);
   }, [activeRide]);
+  const requestRide = async () => {
+    if (!pickup || !destination) {
+      Alert.alert('Ride', 'Chagua sehemu ya kuanzia na unakoenda kwanza.');
+      return;
+    }
+
+    try {
+      const r = await api('/rides', {
+        method: 'POST',
+        body: JSON.stringify({
+          pickupLat: pickup.lat,
+          pickupLng: pickup.lng,
+          destinationLat: destination.lat,
+          destinationLng: destination.lng,
+          pickupAddress: pickup.address,
+          destinationAddress: destination.address,
+          fare: Number(fare),
+        }),
+      });
+
+      setActiveRide(r);
+    } catch (e: any) {
+      Alert.alert('Ride', e.message);
+    }
+  };
+
+  const cancelRide = async () => {
+    try {
+      await api(`/rides/${activeRide.id}/cancel`, { method: 'POST' });
+      setActiveRide(null);
+    } catch (e: any) {
+      Alert.alert('Ride', e.message);
+    }
+  };
+
+  if (activeRide) {
+    return (
+      <View style={s.c}>
+        <RideMap pickup={pickup} destination={destination} driver={driverPos} />
+
+        <View style={s.sheet}>
+          <Text style={s.status}>{activeRide.status}</Text>
+          <Text>Kwenda: {activeRide.destinationAddress}</Text>
+          <Text>Nauli: TZS {activeRide.fare} (Cash)</Text>
+
+          {activeRide.driver && (
+            <Text>
+              Dereva: {activeRide.driver.user?.name} ·{' '}
+              {activeRide.driver.user?.phone}
+            </Text>
+          )}
+
+          {['REQUESTED', 'ACCEPTED'].includes(activeRide.status) && (
+            <PrimaryButton title="Ghairi Ride" onPress={cancelRide} />
+          )}
+
+          <PrimaryButton
+            title="Ripoti Tatizo la Usalama"
+            onPress={() => setShowSafety(true)}
+          />
+        </View>
+
+        <SafetyReportModal
+          visible={showSafety}
+          rideId={activeRide.id}
+          onClose={() => setShowSafety(false)}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View style={s.c}>
+      <Text style={s.h}>Omba Ride</Text>
+
+      <TouchableOpacity
+        style={s.locRow}
+        onPress={() => setPickerFor('pickup')}
+      >
+        <Text style={s.locDot}>🟢</Text>
+        <Text style={s.locText} numberOfLines={1}>
+          {pickup?.address || 'Chagua sehemu ya kuanzia'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={s.locRow}
+        onPress={() => setPickerFor('destination')}
+      >
+        <Text style={s.locDot}>⚫</Text>
+        <Text style={s.locText} numberOfLines={1}>
+          {destination?.address || 'Unakoenda?'}
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={s.fare}>Nauli: TZS {fare}</Text>
+
+      <PrimaryButton title="Omba Ride (Cash)" onPress={requestRide} />
+
+      <LocationPicker
+        visible={pickerFor === 'pickup'}
+        title="Chagua sehemu ya kuanzia"
+        initialRegion={pickup || { lat: -6.8, lng: 39.28 }}
+        onConfirm={(loc) => {
+          setPickup(loc);
+          setPickerFor(null);
+        }}
+        onClose={() => setPickerFor(null)}
+      />
+
+      <LocationPicker
+        visible={pickerFor === 'destination'}
+        title="Unakoenda wapi?"
+        initialRegion={destination || pickup || { lat: -6.8, lng: 39.28 }}
+        onConfirm={(loc) => {
+          setDestination(loc);
+          setPickerFor(null);
+        }}
+        onClose={() => setPickerFor(null)}
+      />
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  c: {
+    flex: 1,
+    backgroundColor: colors.bg,
+    padding: 20,
+    paddingTop: 60,
+  },
+  h: {
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 20,
+    color: colors.text,
+  },
+  locRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    padding: 16,
+    borderRadius: radius.md,
+    marginBottom: 10,
+  },
+  locDot: {
+    marginRight: 10,
+    fontSize: 16,
+  },
+  locText: {
+    flex: 1,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  fare: {
+    marginVertical: 12,
+    color: colors.primaryDark,
+    fontWeight: '700',
+  },
+  sheet: {
+    backgroundColor: colors.card,
+    padding: 16,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+  },
+  status: {
+    fontWeight: '800',
+    fontSize: 18,
+    marginBottom: 6,
+    color: colors.primaryDark,
+  },
+});
